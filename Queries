@@ -1,0 +1,123 @@
+/*     find the murder description     */
+SELECT description
+FROM crime_scene_report
+WHERE type='murder'
+AND LOWER(city)='sql city'
+AND date='20180115';
+
+/*     find the 1st witness and analyse its interview     */
+/*     Use of Inner Join     */
+
+SELECT p.name,
+i.transcript
+FROM person AS p
+JOIN interview AS i
+ON p.id=i.person_id
+WHERE LOWER(address_street_name)='northwestern dr'
+ORDER BY address_number DESC
+LIMIT 1; 
+
+
+/*     find the 2nd witness and analyse its interview     */
+/*     Use of LEFT Join     */ 
+/*     To play with differents joins    */
+
+SELECT p.name,
+i.transcript
+FROM person AS p
+LEFT JOIN interview AS i
+ON p.id=i.person_id
+WHERE LOWER(name) LIKE 'annabel %'
+AND LOWER(address_street_name)='franklin ave';
+
+
+/*     Find the killer based on the indices     */
+/*     Temporary tables with the use of Common Table Expression
+ and JOINS     */
+
+With gym_indices AS 
+(
+SELECT m.id,
+       m.membership_status,
+       m.person_id,
+       d.check_in_date
+FROM get_fit_now_member AS m
+JOIN get_fit_now_check_in AS d
+ON m.id=d.membership_id
+WHERE LOWER(m.id) LIKE '48Z%'
+AND m.membership_status='gold'
+AND d.check_in_date='20180109'),
+
+gender_car_indices AS
+(SELECT p.id,
+       p.name,
+       l.gender,
+       l.plate_number
+FROM gym_indices AS g
+LEFT JOIN person AS p
+ON p.id=g.person_id
+
+LEFT JOIN drivers_license AS l
+ON p.license_id=l.id
+WHERE LOWER(l.gender)='male'
+) 
+
+SELECT id, name
+FROM gender_car_indices;
+
+/*     Insert the solution     */
+INSERT INTO solution(
+user,
+value
+)
+VALUES
+(
+1, 
+'Jeremy Bowers'
+);
+
+SELECT value FROM solution;
+
+
+/*     Part 2    */
+/*     Find the  brains behind the murder    */
+/*    Check Jeremy's interview     */
+
+SELECT transcript
+FROM interview
+WHERE person_id=67318 ;
+
+/*    Find the woman with the description given in Jeremy's interview    */
+
+SELECT 
+    p.id,
+    p.name
+FROM drivers_license AS l
+JOIN person AS p
+ON p.license_id=l.id
+JOIN facebook_event_checkin AS e
+ON p.id=e.person_id
+WHERE LOWER(car_make)='tesla'
+AND LOWER(car_model)='model s'
+AND LOWER(hair_color)='red'
+AND (height>=64 AND height<=68)
+GROUP BY person_id
+HAVING count(e.person_id)=3;
+
+/*     Insert the  brains behind the murder     */
+INSERT INTO solution(
+user,
+value
+)
+VALUES
+(
+1, 
+'Miranda Priestly'
+);
+
+SELECT value FROM solution;
+
+/*    YOHOOOOO    */
+/*    Congrats, you found the brains behind the murder! 
+Everyone in SQL City hails you as the greatest SQL detective of all time
+. Time to break out the champagne!    */
